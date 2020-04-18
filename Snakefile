@@ -9,7 +9,12 @@ rule all:
     input:
         expand("infofiles/{sample}.info", sample = sample_list),
         expand("fastq_files/{sample}_1.fastq.gz", sample = sample_list),
-        expand("fastq_files/{sample}_2.fastq.gz", sample = sample_list)
+        expand("fastq_files/{sample}_2.fastq.gz", sample = sample_list),
+        expand("fastq_files/{sample}_1.fastq",sample = sample_list),
+        expand("fastq_files/{sample}_2.fastq.gz",sample = sample_list),
+        expand("cleaned_fastq/{sample}_1.clean.fastq",sample =sample_list),
+        expand("cleaned_fastq/{sample}_2.clean.fastq",sample =sample_list)
+
 
 rule download_infofiles:
     output:"infofiles/{sample}.info"
@@ -44,3 +49,23 @@ rule download_fastq:
                     print("Retrying download from " + path_fastq)
                     retries = retries - 1
                     continue
+
+rule uncompress_fastq:
+    input:
+        read1="fastq_files/{sample}_1.fastq.gz",
+        read2="fastq_files/{sample}_2.fastq.gz"
+    output:
+        "fastq_files/{sample}_1.fastq",
+        "fastq_files/{sample}_2.fastq"
+    shell:
+        """gunzip -k {input.read1}
+        gunzip -k {input.read2}"""
+
+rule bbduk_trim:
+    input:
+        read1="fastq_files/{sample}_1.fastq",
+        read2="fastq_files/{sample}_2.fastq",
+    output:
+        read1="cleaned_fastq/{sample}_1.clean.fastq",
+        read2="cleaned_fastq/{sample}_2.clean.fastq",
+    shell: """bbduk.sh in1={input.read1} in2={input.read2} out1={output.read1} out2={output.read2} ref=~/miniconda3/envs/rna_seq/opt/bbmap-38.79-0/resources/adapters.fa ktrim=r k=23 mink=11 hdist=1 trimq=20"""
