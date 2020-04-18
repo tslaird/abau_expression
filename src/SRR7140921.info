@@ -1,0 +1,2 @@
+run_accession	fastq_ftp	fastq_bytes	fastq_md5	submitted_ftp	submitted_bytes	submitted_md5	sra_ftp	sra_bytes	sra_md5
+SRR7140921	ftp.sra.ebi.ac.uk/vol1/fastq/SRR714/001/SRR7140921/SRR7140921_1.fastq.gz;ftp.sra.ebi.ac.uk/vol1/fastq/SRR714/001/SRR7140921/SRR7140921_2.fastq.gz	1085883243;1120898724	718c8d048a2f904e7c98208427f65d49;573f9d3f167c2884c392342d92c3512e				ftp.sra.ebi.ac.uk/vol1/srr/SRR714/001/SRR7140921	1575297682	d228263a1cc05cfcf89850f45fd03c8e

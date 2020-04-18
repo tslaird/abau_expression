@@ -13,7 +13,11 @@ rule all:
         expand("fastq_files/{sample}_1.fastq",sample = sample_list),
         expand("fastq_files/{sample}_2.fastq.gz",sample = sample_list),
         expand("cleaned_fastq/{sample}_1.clean.fastq",sample =sample_list),
-        expand("cleaned_fastq/{sample}_2.clean.fastq",sample =sample_list)
+        expand("cleaned_fastq/{sample}_2.clean.fastq",sample =sample_list),
+        "genome/GCF_001593425.2_ASM159342v2_genomic.gbff.gz",
+        "genome/GCF_001593425.2_ASM159342v2_genomic.gbff"
+        directory("salmon_transcriptome_index"),
+        "genome/GCF_001593425.2_ASM159342v2_genomic_transcripts.fasta"
 
 
 rule download_infofiles:
@@ -68,4 +72,26 @@ rule bbduk_trim:
     output:
         read1="cleaned_fastq/{sample}_1.clean.fastq",
         read2="cleaned_fastq/{sample}_2.clean.fastq",
-    shell: """bbduk.sh in1={input.read1} in2={input.read2} out1={output.read1} out2={output.read2} ref=~/miniconda3/envs/rna_seq/opt/bbmap-38.79-0/resources/adapters.fa ktrim=r k=23 mink=11 hdist=1 trimq=20"""
+    shell: """bbduk.sh in1={input.read1} in2={input.read2} out1={output.read1} out2={output.read2} ref=~/miniconda3/envs/rna_seq/opt/bbmap-38.79-0/resources/adapters.fa ktrim=r k=23 mink=11 hdist=1 trimq=20 -Xmx10g"""
+
+rule download_genome:
+    output:
+        zipped="genome/GCF_001593425.2_ASM159342v2_genomic.gbff.gz"
+        unzipped="genome/GCF_001593425.2_ASM159342v2_genomic.gbff"
+    shell:
+        '''
+        wget -O {output.zipped} https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/001/593/425/GCF_001593425.2_ASM159342v2/GCF_001593425.2_ASM159342v2_genomic.gbff.gz
+        gunzip -k {output.zipped}
+        '''
+
+rule generate_transcriptome:
+    input: "genome/GCF_001593425.2_ASM159342v2_genomic.gbff"
+    output: "genome/GCF_001593425.2_ASM159342v2_genomic_transcripts.fasta"
+    shell:
+        '''./src/parse_gbff_transcripts.py {input}'''
+
+rule index_transcriptome:
+    input: "genome/GCF_001593425.2_ASM159342v2_genomic_transcripts.fasta"
+    output: directory("salmon_transcriptome_index")
+    shell:
+        '''salmon index -t {input} -i {output} -k 31'''
